@@ -3,20 +3,21 @@ from collections import deque
 import numpy as np
 import random
 import torch
-
+import helper
+from model import Linear_QNet, QTrainer
 MAX_MEMORY = 100_100
 BATCH_SIZE = 1000
 LR = 0.001
 
 class Agent:
 
-    def _init_(self):
+    def __init__(self):
         self.n_games = 0
         self.epsilon = 0 #randomness
         self.gamma = 0 #discount rate
         self.memory = deque(maxlen=MAX_MEMORY) #when shit gets full it pops element
-        self.model = None
-        self.trainer = None
+        self.model = Linear_QNet(11,256,3)
+        self.trainer = QTrainer(self.model, LR, self.gamma)
 
     def get_state(self, game):
         head = game.snake[0]
@@ -59,8 +60,8 @@ class Agent:
             #food_location
             game.food.x < game.head.x, #food is on left
             game.food.x > game.head.x, #food is on right
-            game.food.y > game.head.y, #food is up
-            game.food.y < game.head.y #food is down
+            game.food.y < game.head.y, #food is up
+            game.food.y > game.head.y #food is down
         ]
 
         return np.array(state, dtype=int)
@@ -75,7 +76,7 @@ class Agent:
         if(len(self.memory) < BATCH_SIZE):
             mini_samples = self.memory
         else:
-            mini_samples = random.samples(self.memory, BATCH_SIZE)
+            mini_samples = random.sample(self.memory, BATCH_SIZE)
         
         states, actions, rewards, next_states, dones = zip(*mini_samples)
 
@@ -87,15 +88,16 @@ class Agent:
         if random.randint(0,200) < self.epsilon:
             index = random.randint(0,2)
         else:
-            torch.tensor(state, dtype=torch.float)
-            self.model.predict(state)
+            state0 = torch.tensor(state, dtype=torch.float)
+            index = torch.argmax(self.model(state0)).item()
         
         move[index] = 1
+        return move
 
 def train():
-    play_scores = []
+    plot_scores = []
     plot_mean_scores = []
-    total_scores = []
+    total_scores = 0
     record = 0
     
     agent = Agent()
@@ -105,7 +107,7 @@ def train():
         #get old state
         state_old = agent.get_state(game)
 
-        #get move
+        #get move - either gives a random move or predicted move - exploration exploitation tradeoff
         final_move = agent.get_action(state_old)
 
         reward, done, score =  game.play_step(final_move)
@@ -129,8 +131,11 @@ def train():
             print("Game", agent.n_games, "Score", score, "Record", record)
 
             #plotting here
-
-
+            plot_scores.append(score)
+            total_scores += score
+            mean_score = total_scores/agent.n_games
+            plot_mean_scores.append(mean_score)
+            helper.plot(plot_scores, plot_mean_scores)
 
 
 if __name__ == "__main__":
