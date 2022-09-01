@@ -11,3 +11,8 @@ reward, game_over, score = game.play_step(action) #play the move and calculate a
 new_state = get_state(game)
 model_train(state, action, new_state, reward, next_state, game_over)
 ```
+
+Using Bellman Equation for calculating Q-Valie (Quality of Action)
+```
+Q_new = Reward + γ*max(model.predict(new_state)) # γ is Discount Factor
+```
