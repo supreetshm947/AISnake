@@ -1,4 +1,4 @@
 # AISnake
 Using Reinforcement Learning to play Snake Game.
 
-![Alt Text](https://github.com/supreetshm947/AISnake/blob/main/Demo.gif)
+<img src="https://github.com/supreetshm947/AISnake/blob/main/Demo.gif" width="40" height="40" />
