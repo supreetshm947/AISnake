@@ -1,6 +1,8 @@
 from game import Direction, SnakeGame, Point
 from collections import deque
 import numpy as np
+import random
+import torch
 
 MAX_MEMORY = 100_100
 BATCH_SIZE = 1000
@@ -13,6 +15,8 @@ class Agent:
         self.epsilon = 0 #randomness
         self.gamma = 0 #discount rate
         self.memory = deque(maxlen=MAX_MEMORY) #when shit gets full it pops element
+        self.model = None
+        self.trainer = None
 
     def get_state(self, game):
         head = game.snake[0]
@@ -62,13 +66,31 @@ class Agent:
         return np.array(state, dtype=int)
 
     def train_short_memory(self, state, action, reward, next_state, done):
-        pass
+        self.trainer.train_step(state, action, reward, next_state, done)
 
     def remember(self, state, action, reward, next_state, done):
-        pass
+        self.memory.append((state, action, reward, next_state, done))
 
     def train_long_memory(self):
-        pass
+        if(len(self.memory) < BATCH_SIZE):
+            mini_samples = self.memory
+        else:
+            mini_samples = random.samples(self.memory, BATCH_SIZE)
+        
+        states, actions, rewards, next_states, dones = zip(*mini_samples)
+
+        self.trainer.train_step(states, actions, rewards, next_states, dones)
+    
+    def get_action(self, state):
+        self.epsilon = 80 - self.n_games
+        move = [0,0,0]
+        if random.randint(0,200) < self.epsilon:
+            index = random.randint(0,2)
+        else:
+            torch.tensor(state, dtype=torch.float)
+            self.model.predict(state)
+        
+        move[index] = 1
 
 def train():
     play_scores = []
